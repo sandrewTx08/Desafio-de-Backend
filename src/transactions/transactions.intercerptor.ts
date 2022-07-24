@@ -4,38 +4,74 @@ import {
   ExecutionContext,
   CallHandler,
 } from '@nestjs/common';
-import { Users } from '@prisma/client';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { EmailsService } from 'src/emails.service';
+import { UsersService } from 'src/users/users.service';
+import {
+  TransactionBuyType,
+  TransactionDepositType,
+  TransactionTransferType,
+} from './transactions.types';
 
 @Injectable()
 export class TransactionsEmailNotification implements NestInterceptor {
-  constructor(private emailService: EmailsService) {}
+  constructor(
+    private readonly emailService: EmailsService,
+    private readonly userService: UsersService,
+  ) {}
 
   intercept(
     context: ExecutionContext,
-    next: CallHandler<{ to_user?: Users; from_user: Users }>,
+    next: CallHandler<any>,
   ): Observable<any> {
     return next.handle().pipe(
-      map((data) => {
-        // if (data.from_user) {
-        //   this.emailService.sendByGmailProvider({
-        //     to: data.from_user.email,
-        //     subject: 'Transfer',
-        //   });
-        //   this.emailService.sendByGmailProvider({
-        //     to: data.to_user.email,
-        //     subject: 'Transfer',
-        //   });
-        // } else
-        //   this.emailService.sendByGmailProvider({
-        //     to: data.from_user.email,
-        //     subject: 'Deposit',
-        //     text: 'Deposit',
-        //   });
+      map(async (data) => {
+        {
+          switch (data.transaction_type) {
+            case 1: {
+              const from_user = await this.userService.findOne({
+                id: (<TransactionDepositType>data).from.id,
+              });
 
-        return data;
+              return this.emailService.sendByGmailProvider({
+                to: from_user.email,
+              });
+            }
+
+            case 2: {
+              const [from_user, to_user] = await Promise.all([
+                this.userService.findOne({
+                  id: (<TransactionTransferType>data).from.id,
+                }),
+                this.userService.findOne({
+                  id: (<TransactionTransferType>data).to.id,
+                }),
+              ]);
+
+              const [from_user_email, to_user_email] = await Promise.all([
+                this.emailService.sendByGmailProvider({ to: from_user.email }),
+                this.emailService.sendByGmailProvider({ to: to_user.email }),
+              ]);
+            }
+
+            case 3: {
+              const [from_user, to_user] = await Promise.all([
+                this.userService.findOne({
+                  id: (<TransactionBuyType>data).from.id,
+                }),
+                this.userService.findOne({
+                  id: (<TransactionBuyType>data).to.id,
+                }),
+              ]);
+
+              const [from_user_email, to_user_email] = await Promise.all([
+                this.emailService.sendByGmailProvider({ to: from_user.email }),
+                this.emailService.sendByGmailProvider({ to: to_user.email }),
+              ]);
+            }
+          }
+        }
       }),
     );
   }

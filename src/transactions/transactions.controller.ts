@@ -36,6 +36,7 @@ export class TransactionsController {
   }
 
   @Put('/buy')
+  @UseInterceptors(TransactionsEmailNotification)
   buy(@Body() body: TransactionBuyPipe) {
     return this.transactionsService.buy(body);
   }

@@ -13,6 +13,7 @@ import {
   TransactionDepositPipe,
   TransactionTransferPipe,
 } from './transactions.pipe';
+import { TransactionBuyType, TransactionDepositType, TransactionTransferType } from './transactions.types';
 
 @Injectable()
 export class TransactionsService {
@@ -22,7 +23,7 @@ export class TransactionsService {
     private readonly productService: ProductsService,
   ) {}
 
-  async transfer(data: TransactionTransferPipe) {
+  async transfer(data: TransactionTransferPipe): Promise<TransactionTransferType> {
     const { from_account_id, to_account_id, amount } = data;
 
     if (from_account_id === to_account_id) throw ERROR_YOURSELF_TRANSFER;
@@ -56,10 +57,10 @@ export class TransactionsService {
       }),
     ]);
 
-    return { to: to_update, from: from_update };
+    return { to: to_update, from: from_update, transaction_type: 2 };
   }
 
-  async deposit(data: TransactionDepositPipe) {
+  async deposit(data: TransactionDepositPipe): Promise<TransactionDepositType> {
     const { from_account_id, amount } = data;
 
     const from = await this.accountService.findOne({
@@ -75,10 +76,10 @@ export class TransactionsService {
       this.create({ amount, from_account_id, transaction_type: 1 }),
     ]);
 
-    return from_update;
+    return { from: from_update, transaction_type: 1 };
   }
 
-  async buy(data: TransactionBuyPipe) {
+  async buy(data: TransactionBuyPipe): Promise<TransactionBuyType> {
     const { from_account_id, product_id, quantity } = data;
 
     const product = await this.productService.findOne({ id: product_id });
@@ -121,7 +122,12 @@ export class TransactionsService {
       }),
     ]);
 
-    return { to: to_update, from: from_update, product: product_update };
+    return {
+      to: to_update,
+      from: from_update,
+      product: product_update,
+      transaction_type: 3,
+    };
   }
 
   create(data: Prisma.TransactionsUncheckedCreateInput) {

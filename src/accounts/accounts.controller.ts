@@ -26,7 +26,7 @@ export class AccountsController {
 
   @Get(':id')
   findOne(@Param('id') id: number) {
-    return this.accountsService.findOne({ id: +id });
+    return this.accountsService.findOne({ id });
   }
 
   @Patch(':id')

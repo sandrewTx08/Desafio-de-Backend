@@ -148,7 +148,7 @@ export class TransactionsService {
     });
   }
 
-  WEEK = 1000 * 60 * 60 * 24 * 6;
+  WEEK = 1000 * 60 * 60 * 24 * 7;
   findWeeks(where: Prisma.TransactionsWhereInput, numberOfWeeks: number) {
     const gte = new Date(
       new Date().getMilliseconds() - this.WEEK * numberOfWeeks,

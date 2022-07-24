@@ -4,6 +4,11 @@ import { AccountsService } from 'src/accounts/accounts.service';
 import { PrismaService } from 'src/prisma.service';
 import { ProductsService } from 'src/products/products.service';
 import {
+  ERROR_NO_FUNDS,
+  ERROR_USER_TRANSFER,
+  ERROR_YOURSELF_TRANSFER,
+} from './transactions.exception';
+import {
   TransactionBuyPipe,
   TransactionDepositPipe,
   TransactionTransferPipe,
@@ -20,19 +25,19 @@ export class TransactionsService {
   async transfer(data: TransactionTransferPipe) {
     const { from_account_id, to_account_id, amount } = data;
 
-    if (from_account_id === to_account_id) return 'Error';
+    if (from_account_id === to_account_id) throw ERROR_YOURSELF_TRANSFER;
 
     const [from, to] = await Promise.all([
       this.accountService.findOne({ id: from_account_id }),
       this.accountService.findOne({ id: to_account_id }),
     ]);
 
-    if (!to || !from) return 'Error';
+    if (!to || !from) throw ERROR_USER_TRANSFER;
 
     const from_balance = from.balance.toNumber();
     const to_balance = to.balance.toNumber();
 
-    if (from_balance < amount) return 'Error';
+    if (from_balance < amount) throw ERROR_NO_FUNDS;
 
     const [to_update, from_update] = await Promise.all([
       this.accountService.update(
@@ -80,7 +85,7 @@ export class TransactionsService {
     const product_price = product.price.toNumber();
     const amount = product_price * quantity;
 
-    if (from_account_id === product.account_id) return 'Error';
+    if (from_account_id === product.account_id) throw ERROR_YOURSELF_TRANSFER;
 
     const [from, to] = await Promise.all([
       this.accountService.findOne({ id: from_account_id }),
@@ -88,7 +93,8 @@ export class TransactionsService {
     ]);
 
     const from_balance = from.balance.toNumber();
-    if (from_balance < amount) return 'Error';
+    if (from_balance < amount) throw ERROR_NO_FUNDS;
+
     const from_amount = from_balance - amount;
 
     const to_balance = to.balance.toNumber();

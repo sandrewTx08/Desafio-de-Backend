@@ -41,7 +41,9 @@ export class TransactionsController {
   }
 
   @Post()
-  create(@Body() createTransactionDto: Prisma.TransactionsCreateInput) {
+  create(
+    @Body() createTransactionDto: Prisma.TransactionsUncheckedCreateInput,
+  ) {
     return this.transactionsService.create(createTransactionDto);
   }
 

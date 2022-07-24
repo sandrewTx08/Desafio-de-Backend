@@ -53,6 +53,22 @@ export class TransactionsController {
     return this.transactionsService.findAll();
   }
 
+  @Get('/:id/days/:days')
+  findDays(@Param('id') id: number, @Param('days') numberOfDays: number) {
+    return this.transactionsService.findDays(
+      { from_account_id: id },
+      numberOfDays,
+    );
+  }
+
+  @Get('/:id/weeks/:weeks')
+  findWeeks(@Param('id') id: number, @Param('weeks') numberOfWeeks: number) {
+    return this.transactionsService.findWeeks(
+      { from_account_id: id },
+      numberOfWeeks,
+    );
+  }
+
   @Get(':id')
   findOne(@Param('id') id: number) {
     return this.transactionsService.findOne({ id });

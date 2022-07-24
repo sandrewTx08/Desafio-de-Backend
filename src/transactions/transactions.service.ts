@@ -138,6 +138,26 @@ export class TransactionsService {
     return this.prisma.transactions.findMany();
   }
 
+  DAY = 1000 * 60 * 60 * 24;
+  findDays(where: Prisma.TransactionsWhereInput, numberOfDays: number) {
+    const gte = new Date(
+      new Date().getMilliseconds() - this.DAY * numberOfDays,
+    );
+    return this.prisma.transactions.findMany({
+      where: { ...where, date: { gte } },
+    });
+  }
+
+  WEEK = 1000 * 60 * 60 * 24 * 6;
+  findWeeks(where: Prisma.TransactionsWhereInput, numberOfWeeks: number) {
+    const gte = new Date(
+      new Date().getMilliseconds() - this.WEEK * numberOfWeeks,
+    );
+    return this.prisma.transactions.findMany({
+      where: { ...where, date: { gte } },
+    });
+  }
+
   findOne(where: Prisma.TransactionsWhereInput) {
     return this.prisma.transactions.findFirst({ where });
   }

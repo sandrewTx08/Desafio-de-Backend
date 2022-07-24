@@ -18,5 +18,5 @@ export enum ResponseCodesWarn {
 }
 
 export enum ResponseCodesSuccess {
-  SUCCESS_1 = '',
+  SUCCESS_1 = 'Request succeed.',
 }

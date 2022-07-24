@@ -17,10 +17,6 @@ export class TransactionsService {
     private readonly productService: ProductsService,
   ) {}
 
-  history(data: Prisma.TransactionsUncheckedCreateInput) {
-    return this.prisma.transactions.create({ data });
-  }
-
   async transfer(data: TransactionTransferPipe) {
     const { from_account_id, to_account_id, amount } = data;
 
@@ -47,7 +43,7 @@ export class TransactionsService {
         { id: from_account_id },
         { balance: from_balance - amount },
       ),
-      this.history({
+      this.create({
         amount,
         from_account_id,
         to_account_id,
@@ -71,7 +67,7 @@ export class TransactionsService {
         { id: from_account_id },
         { balance: balance + amount },
       ),
-      this.history({ amount, from_account_id, transaction_type: 1 }),
+      this.create({ amount, from_account_id, transaction_type: 1 }),
     ]);
 
     return from_update;
@@ -111,7 +107,7 @@ export class TransactionsService {
         { id: from_account_id },
         { balance: from_amount },
       ),
-      this.history({
+      this.create({
         amount: from_amount,
         from_account_id,
         to_account_id: product.account_id,
@@ -122,7 +118,7 @@ export class TransactionsService {
     return { to: to_update, from: from_update, product: product_update };
   }
 
-  create(data: Prisma.TransactionsCreateInput) {
+  create(data: Prisma.TransactionsUncheckedCreateInput) {
     return this.prisma.transactions.create({ data });
   }
 

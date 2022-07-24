@@ -31,14 +31,14 @@ export class AccountsController {
 
   @Patch(':id')
   update(
-    @Param('id') id: string,
+    @Param('id') id: number,
     @Body() updateAccountDto: Prisma.AccountsUpdateInput,
   ) {
-    return this.accountsService.update({ id: +id }, updateAccountDto);
+    return this.accountsService.update({ id }, updateAccountDto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.accountsService.remove({ id: +id });
+  remove(@Param('id') id: number) {
+    return this.accountsService.remove({ id });
   }
 }

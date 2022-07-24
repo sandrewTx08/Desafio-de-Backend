@@ -26,19 +26,19 @@ export class ProductsController {
 
   @Get(':id')
   findOne(@Param('id') id: number) {
-    return this.productsService.findOne({ id: +id });
+    return this.productsService.findOne({ id });
   }
 
   @Patch(':id')
   update(
-    @Param('id') id: string,
+    @Param('id') id: number,
     @Body() updateProductDto: Prisma.ProductsUpdateInput,
   ) {
-    return this.productsService.update({ id: +id }, updateProductDto);
+    return this.productsService.update({ id }, updateProductDto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.productsService.remove({ id: +id });
+  remove(@Param('id') id: number) {
+    return this.productsService.remove({ id });
   }
 }

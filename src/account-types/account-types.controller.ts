@@ -26,19 +26,19 @@ export class AccountTypesController {
 
   @Get(':id')
   findOne(@Param('id') id: number) {
-    return this.accountTypesService.findOne({ id: +id });
+    return this.accountTypesService.findOne({ id });
   }
 
   @Patch(':id')
   update(
-    @Param('id') id: string,
+    @Param('id') id: number,
     @Body() updateAccountTypeDto: Prisma.AccountTypesUpdateInput,
   ) {
-    return this.accountTypesService.update({ id: +id }, updateAccountTypeDto);
+    return this.accountTypesService.update({ id }, updateAccountTypeDto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.accountTypesService.remove({ id: +id });
+  remove(@Param('id') id: number) {
+    return this.accountTypesService.remove({ id });
   }
 }

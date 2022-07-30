@@ -49,8 +49,9 @@ export class TransactionsService {
         account_type_id: from.account_type_id,
         transaction_type_id: 2,
       });
-    const from_transfer_fee =
-      amount * fee_percentage.toNumber() - fee_fixed.toNumber();
+    const from_transfer_fee = Math.abs(
+      amount * fee_percentage.toNumber() - fee_fixed.toNumber(),
+    );
     const from_tranfer_balance = from_balance - amount - from_transfer_fee;
     const to_balance = to.balance.toNumber();
 
@@ -88,13 +89,14 @@ export class TransactionsService {
         account_type_id: from.account_type_id,
         transaction_type_id: 1,
       });
-    const balance_fee =
-      amount * fee_percentage.toNumber() - fee_fixed.toNumber();
+    const deposit_fee = Math.abs(
+      amount * fee_percentage.toNumber() - fee_fixed.toNumber(),
+    );
 
     const [from_update] = await Promise.all([
       this.accountService.update(
         { id: from_account_id },
-        { balance: balance + amount - balance_fee },
+        { balance: balance + amount - deposit_fee },
       ),
       this.create({ amount, from_account_id, transaction_type: 1 }),
     ]);

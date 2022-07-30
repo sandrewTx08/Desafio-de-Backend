@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
+import { AccountTransactionTypesService } from 'src/account-transaction-types/account-transaction-types.service';
 import { AccountsService } from 'src/accounts/accounts.service';
 import { PrismaService } from 'src/prisma.service';
 import { ProductsService } from 'src/products/products.service';
@@ -13,7 +14,11 @@ import {
   TransactionDepositPipe,
   TransactionTransferPipe,
 } from './transactions.pipe';
-import { TransactionBuyType, TransactionDepositType, TransactionTransferType } from './transactions.types';
+import {
+  TransactionBuyType,
+  TransactionDepositType,
+  TransactionTransferType,
+} from './transactions.types';
 
 @Injectable()
 export class TransactionsService {
@@ -21,9 +26,12 @@ export class TransactionsService {
     private readonly prisma: PrismaService,
     private readonly accountService: AccountsService,
     private readonly productService: ProductsService,
+    private readonly accountTransactionTypeService: AccountTransactionTypesService,
   ) {}
 
-  async transfer(data: TransactionTransferPipe): Promise<TransactionTransferType> {
+  async transfer(
+    data: TransactionTransferPipe,
+  ): Promise<TransactionTransferType> {
     const { from_account_id, to_account_id, amount } = data;
 
     if (from_account_id === to_account_id) throw ERROR_YOURSELF_TRANSFER;
@@ -36,9 +44,17 @@ export class TransactionsService {
     if (!to || !from) throw ERROR_USER_TRANSFER;
 
     const from_balance = from.balance.toNumber();
+    const { fee_percentage, fee_fixed } =
+      await this.accountTransactionTypeService.findOne({
+        account_type_id: from.account_type_id,
+        transaction_type_id: 2,
+      });
+    const from_transfer_fee =
+      amount * fee_percentage.toNumber() - fee_fixed.toNumber();
+    const from_tranfer_balance = from_balance - amount - from_transfer_fee;
     const to_balance = to.balance.toNumber();
 
-    if (from_balance < amount) throw ERROR_NO_FUNDS;
+    if (from_tranfer_balance < amount) throw ERROR_NO_FUNDS;
 
     const [to_update, from_update] = await Promise.all([
       this.accountService.update(
@@ -47,7 +63,7 @@ export class TransactionsService {
       ),
       this.accountService.update(
         { id: from_account_id },
-        { balance: from_balance - amount },
+        { balance: from_tranfer_balance },
       ),
       this.create({
         amount,
@@ -67,11 +83,18 @@ export class TransactionsService {
       id: from_account_id,
     });
     const balance = from.balance.toNumber();
+    const { fee_percentage, fee_fixed } =
+      await this.accountTransactionTypeService.findOne({
+        account_type_id: from.account_type_id,
+        transaction_type_id: 1,
+      });
+    const balance_fee =
+      amount * fee_percentage.toNumber() - fee_fixed.toNumber();
 
     const [from_update] = await Promise.all([
       this.accountService.update(
         { id: from_account_id },
-        { balance: balance + amount },
+        { balance: balance + amount - balance_fee },
       ),
       this.create({ amount, from_account_id, transaction_type: 1 }),
     ]);

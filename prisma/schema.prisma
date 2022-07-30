@@ -38,9 +38,10 @@ model Transactions {
 }
 
 model TransactionTypes {
-  id           Int            @id @default(autoincrement())
-  description  String         @db.VarChar(75)
-  Transactions Transactions[]
+  id                      Int                       @id @default(autoincrement())
+  description             String                    @db.VarChar(75)
+  Transactions            Transactions[]
+  AccountTransactionTypes AccountTransactionTypes[]
 }
 
 model Accounts {
@@ -60,10 +61,24 @@ model Accounts {
   @@id([id])
 }
 
+model AccountTransactionTypes {
+  fee_percentage Decimal @db.Decimal(3, 3)
+  fee_fixed      Decimal @db.Money
+
+  AccountTypes    AccountTypes @relation(fields: [account_type_id], references: [id])
+  account_type_id Int
+
+  TransactionTypes    TransactionTypes @relation(fields: [transaction_type_id], references: [id])
+  transaction_type_id Int
+
+  @@id([account_type_id, transaction_type_id])
+}
+
 model AccountTypes {
-  id          Int        @id @default(autoincrement())
-  description String     @db.VarChar(75)
-  Accounts    Accounts[]
+  id                      Int                       @id @default(autoincrement())
+  description             String                    @db.VarChar(75)
+  Accounts                Accounts[]
+  AccountTransactionTypes AccountTransactionTypes[]
 }
 
 model Products {

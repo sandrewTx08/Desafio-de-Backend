@@ -10,9 +10,10 @@ import { AccountsModule } from './accounts/accounts.module';
 import { AccountTypesModule } from './account-types/account-types.module';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { AppResponseTemplate } from './app.interceptor';
+import { AccountTransactionTypesModule } from './account-transaction-types/account-transaction-types.module';
 
 @Module({
-  imports: [UsersModule, TransactionsModule, TransactiontypesModule, ProductsModule, ProductTypesModule, AccountsModule, AccountTypesModule],
+  imports: [UsersModule, TransactionsModule, TransactiontypesModule, ProductsModule, ProductTypesModule, AccountsModule, AccountTypesModule, AccountTransactionTypesModule],
   controllers: [AppController],
   providers: [AppService, {provide: APP_INTERCEPTOR, useClass: AppResponseTemplate }],
 })

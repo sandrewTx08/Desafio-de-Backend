@@ -16,6 +16,7 @@ import {
 } from './transactions.pipe';
 import {
   TransactionBuyType,
+  TransactionCode,
   TransactionDepositType,
   TransactionTransferType,
 } from './transactions.types';
@@ -46,7 +47,7 @@ export class TransactionsService {
     const { fee_percentage, fee_fixed } =
       await this.accountTransactionTypeService.findOne({
         account_type_id: from.account_type_id,
-        transaction_type_id: 2,
+        transaction_type_id: TransactionCode.TRANSFER,
       });
 
     const from_balance = from.balance.toNumber();
@@ -72,11 +73,15 @@ export class TransactionsService {
         amount,
         from_account_id,
         to_account_id,
-        transaction_type: 2,
+        transaction_type: TransactionCode.TRANSFER,
       }),
     ]);
 
-    return { to: to_update, from: from_update, transaction_type: 2 };
+    return {
+      to: to_update,
+      from: from_update,
+      transaction_type: TransactionCode.TRANSFER,
+    };
   }
 
   async deposit(data: TransactionDepositPipe): Promise<TransactionDepositType> {
@@ -102,10 +107,14 @@ export class TransactionsService {
         { id: from_account_id },
         { balance: balance + amount - deposit_fee },
       ),
-      this.create({ amount, from_account_id, transaction_type: 1 }),
+      this.create({
+        amount,
+        from_account_id,
+        transaction_type: TransactionCode.DEPOSIT,
+      }),
     ]);
 
-    return { from: from_update, transaction_type: 1 };
+    return { from: from_update, transaction_type: TransactionCode.DEPOSIT };
   }
 
   async buy(data: TransactionBuyPipe): Promise<TransactionBuyType> {
@@ -147,7 +156,7 @@ export class TransactionsService {
           amount: from_amount,
           from_account_id,
           to_account_id: product.account_id,
-          transaction_type: 3,
+          transaction_type: TransactionCode.BUY,
         }),
       ]);
 
@@ -155,7 +164,7 @@ export class TransactionsService {
       to: to_update,
       from: from_update,
       product: product_update,
-      transaction_type: 3,
+      transaction_type: TransactionCode.BUY,
     };
   }
 

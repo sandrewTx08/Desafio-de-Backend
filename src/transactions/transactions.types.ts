@@ -1,16 +1,27 @@
 import { Accounts, Products } from '@prisma/client';
 
-export type TransactionTransferType = {
+export enum TransactionCode {
+  DEPOSIT = 1,
+  TRANSFER = 2,
+  BUY = 3,
+}
+
+export type TransactionTypeBase<Code extends TransactionCode, T = any> = T & {
   from: Accounts;
-  to: Accounts;
-  transaction_type: 2;
+  transaction_type: Code;
 };
 
-export type TransactionDepositType = { from: Accounts; transaction_type: 1 };
+export type TransactionTransferType = TransactionTypeBase<
+  TransactionCode.TRANSFER,
+  {
+    to: Accounts;
+  }
+>;
 
-export type TransactionBuyType = {
-  to: Accounts;
-  from: Accounts;
-  product: Products;
-  transaction_type: 3;
-};
+export type TransactionDepositType =
+  TransactionTypeBase<TransactionCode.DEPOSIT>;
+
+export type TransactionBuyType = TransactionTypeBase<
+  TransactionCode.BUY,
+  { to: Accounts; product: Products }
+>;

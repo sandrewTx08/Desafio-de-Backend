@@ -43,19 +43,21 @@ export class TransactionsService {
 
     if (!to || !from) throw ERROR_USER_TRANSFER;
 
-    const from_balance = from.balance.toNumber();
     const { fee_percentage, fee_fixed } =
       await this.accountTransactionTypeService.findOne({
         account_type_id: from.account_type_id,
         transaction_type_id: 2,
       });
+
+    const from_balance = from.balance.toNumber();
     const from_transfer_fee = Math.abs(
       amount * fee_percentage.toNumber() - fee_fixed.toNumber(),
     );
     const from_tranfer_balance = from_balance - amount - from_transfer_fee;
-    const to_balance = to.balance.toNumber();
 
     if (from_tranfer_balance < amount) throw ERROR_NO_FUNDS;
+
+    const to_balance = to.balance.toNumber();
 
     const [to_update, from_update] = await this.prisma.$transaction([
       this.accountService.update(
@@ -83,12 +85,14 @@ export class TransactionsService {
     const from = await this.accountService.findOne({
       id: from_account_id,
     });
-    const balance = from.balance.toNumber();
+
     const { fee_percentage, fee_fixed } =
       await this.accountTransactionTypeService.findOne({
         account_type_id: from.account_type_id,
         transaction_type_id: 1,
       });
+
+    const balance = from.balance.toNumber();
     const deposit_fee = Math.abs(
       amount * fee_percentage.toNumber() - fee_fixed.toNumber(),
     );
@@ -109,7 +113,7 @@ export class TransactionsService {
 
     const product = await this.productService.findOne({ id: product_id });
     const product_price = product.price.toNumber();
-    const amount = product_price * quantity;
+    const price = product_price * quantity;
 
     if (from_account_id === product.account_id) throw ERROR_YOURSELF_TRANSFER;
 
@@ -119,12 +123,11 @@ export class TransactionsService {
     ]);
 
     const from_balance = from.balance.toNumber();
-    if (from_balance < amount) throw ERROR_NO_FUNDS;
-
-    const from_amount = from_balance - amount;
+    if (from_balance < price) throw ERROR_NO_FUNDS;
+    const from_amount = from_balance - price;
 
     const to_balance = to.balance.toNumber();
-    const to_amount = to_balance + amount;
+    const to_amount = to_balance + price;
 
     const [product_update, to_update, from_update] =
       await this.prisma.$transaction([

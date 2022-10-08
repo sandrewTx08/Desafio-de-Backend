@@ -36,7 +36,7 @@ export class TransactionsService {
 
     if (from_account_id === to_account_id) throw ERROR_YOURSELF_TRANSFER;
 
-    const [from, to] = await Promise.all([
+    const [from, to] = await this.prisma.$transaction([
       this.accountService.findOne({ id: from_account_id }),
       this.accountService.findOne({ id: to_account_id }),
     ]);
@@ -57,7 +57,7 @@ export class TransactionsService {
 
     if (from_tranfer_balance < amount) throw ERROR_NO_FUNDS;
 
-    const [to_update, from_update] = await Promise.all([
+    const [to_update, from_update] = await this.prisma.$transaction([
       this.accountService.update(
         { id: to_account_id },
         { balance: to_balance + amount },
@@ -93,7 +93,7 @@ export class TransactionsService {
       amount * fee_percentage.toNumber() - fee_fixed.toNumber(),
     );
 
-    const [from_update] = await Promise.all([
+    const [from_update] = await this.prisma.$transaction([
       this.accountService.update(
         { id: from_account_id },
         { balance: balance + amount - deposit_fee },
@@ -113,7 +113,7 @@ export class TransactionsService {
 
     if (from_account_id === product.account_id) throw ERROR_YOURSELF_TRANSFER;
 
-    const [from, to] = await Promise.all([
+    const [from, to] = await this.prisma.$transaction([
       this.accountService.findOne({ id: from_account_id }),
       this.accountService.findOne({ id: product.account_id }),
     ]);
@@ -126,26 +126,27 @@ export class TransactionsService {
     const to_balance = to.balance.toNumber();
     const to_amount = to_balance + amount;
 
-    const [product_update, to_update, from_update] = await Promise.all([
-      this.productService.update(
-        { id: product_id },
-        { quantity: product.quantity - quantity },
-      ),
-      this.accountService.update(
-        { id: product.account_id },
-        { balance: to_amount },
-      ),
-      this.accountService.update(
-        { id: from_account_id },
-        { balance: from_amount },
-      ),
-      this.create({
-        amount: from_amount,
-        from_account_id,
-        to_account_id: product.account_id,
-        transaction_type: 3,
-      }),
-    ]);
+    const [product_update, to_update, from_update] =
+      await this.prisma.$transaction([
+        this.productService.update(
+          { id: product_id },
+          { quantity: product.quantity - quantity },
+        ),
+        this.accountService.update(
+          { id: product.account_id },
+          { balance: to_amount },
+        ),
+        this.accountService.update(
+          { id: from_account_id },
+          { balance: from_amount },
+        ),
+        this.create({
+          amount: from_amount,
+          from_account_id,
+          to_account_id: product.account_id,
+          transaction_type: 3,
+        }),
+      ]);
 
     return {
       to: to_update,

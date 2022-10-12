@@ -94,8 +94,8 @@ export class TransactionsService {
     const { fee_percentage, fee_fixed } =
       await this.accountTransactionTypeService.findOne({
         account_type_id: from.account_type_id,
-        transaction_type: TransactionCode.DEPOSIT,      
-      });
+        transaction_type: TransactionCode.DEPOSIT,
+      } as Prisma.AccountTransactionTypesWhereInput);
 
     const balance = from.balance.toNumber();
     const deposit_fee = Math.abs(

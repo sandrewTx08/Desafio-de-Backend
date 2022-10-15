@@ -44,26 +44,18 @@ export class TransactionsService {
 
     if (!to || !from) throw ERROR_USER_TRANSFER;
 
-    const { fee_percentage, fee_fixed } =
-      await this.accountTransactionTypeService.findOne({
-        account_type_id: from.account_type_id,
-        transaction_type_id: TransactionCode.TRANSFER,
-      });
+    const { fee } = await this.accountTransactionTypeService.findOne({
+      account_type_id: from.account_type_id,
+      transaction_type_id: TransactionCode.TRANSFER,
+    });
 
-    const from_balance = from.balance.toNumber();
-    const from_transfer_fee = Math.abs(
-      amount * fee_percentage.toNumber() - fee_fixed.toNumber(),
-    );
-    const from_tranfer_balance = from_balance - amount - from_transfer_fee;
-
-    if (from_tranfer_balance < amount) throw ERROR_NO_FUNDS;
-
-    const to_balance = to.balance.toNumber();
+    const from_tranfer_balance = from.balance.sub(amount).sub(fee(amount));
+    if (from_tranfer_balance.lt(amount)) throw ERROR_NO_FUNDS;
 
     const [to_update, from_update] = await this.prisma.$transaction([
       this.accountService.update(
         { id: to_account_id },
-        { balance: to_balance + amount },
+        { balance: to.balance.add(amount) },
       ),
       this.accountService.update(
         { id: from_account_id },
@@ -91,21 +83,15 @@ export class TransactionsService {
       id: from_account_id,
     });
 
-    const { fee_percentage, fee_fixed } =
-      await this.accountTransactionTypeService.findOne({
-        account_type_id: from.account_type_id,
-        transaction_type_id: TransactionCode.DEPOSIT,
-      });
-
-    const balance = from.balance.toNumber();
-    const deposit_fee = Math.abs(
-      amount * fee_percentage.toNumber() - fee_fixed.toNumber(),
-    );
+    const { fee } = await this.accountTransactionTypeService.findOne({
+      account_type_id: from.account_type_id,
+      transaction_type_id: TransactionCode.DEPOSIT,
+    });
 
     const [from_update] = await this.prisma.$transaction([
       this.accountService.update(
         { id: from_account_id },
-        { balance: balance + amount - deposit_fee },
+        { balance: from.balance.add(amount).sub(fee(amount)) },
       ),
       this.create({
         amount,

@@ -1,7 +1,7 @@
 import { Injectable, ExecutionContext, CallHandler } from '@nestjs/common';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { ResponseCodesSuccess, ResponseTemplate } from './types';
+import { ResponseCodes, ResponseTemplate } from './types';
 
 @Injectable()
 export class AppResponseTemplate<T> {
@@ -12,7 +12,8 @@ export class AppResponseTemplate<T> {
     return next.handle().pipe(
       map((data) => ({
         code: 'SUCCESS_1',
-        message: ResponseCodesSuccess.SUCCESS_1,
+        success: true,
+        message: ResponseCodes.SUCCESS_1,
         data,
       })),
     );

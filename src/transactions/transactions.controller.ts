@@ -16,7 +16,11 @@ import {
   TransactionDepositPipe,
   TransactionTransferPipe,
 } from './transactions.pipe';
-import { TransactionsEmailNotification } from './transactions.intercerptor';
+import {
+  TransactionBuyEmailNotification,
+  TransactionDepositEmailNotification,
+  TransactionTransferEmailNotification,
+} from './transactions.intercerptor';
 import { UpdateTransactionDto } from './dto/update-transaction.dto';
 
 @Controller('transactions')
@@ -24,19 +28,19 @@ export class TransactionsController {
   constructor(private readonly transactionsService: TransactionsService) {}
 
   @Put('/deposit')
-  @UseInterceptors(TransactionsEmailNotification)
+  @UseInterceptors(TransactionDepositEmailNotification)
   deposit(@Body() body: TransactionDepositPipe) {
     return this.transactionsService.deposit(body);
   }
 
   @Put('/transfer')
-  @UseInterceptors(TransactionsEmailNotification)
+  @UseInterceptors(TransactionTransferEmailNotification)
   transfer(@Body() body: TransactionTransferPipe) {
     return this.transactionsService.transfer(body);
   }
 
   @Put('/buy')
-  @UseInterceptors(TransactionsEmailNotification)
+  @UseInterceptors(TransactionBuyEmailNotification)
   buy(@Body() body: TransactionBuyPipe) {
     return this.transactionsService.buy(body);
   }

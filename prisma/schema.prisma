@@ -64,6 +64,7 @@ model Accounts {
 model AccountTransactionTypes {
   fee_percentage Decimal
   fee_fixed      Decimal @db.Money
+  fee_max        Decimal @default(1000) @db.Money
 
   AccountTypes    AccountTypes @relation(fields: [account_type_id], references: [id])
   account_type_id Int

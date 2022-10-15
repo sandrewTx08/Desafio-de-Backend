@@ -28,7 +28,7 @@ export class AccountTransactionTypesService {
             .add(data.fee_fixed);
 
           if (fee.gt(amount)) throw ERROR_NO_FUNDS;
-          return fee;
+          return fee.gt(data.fee_max) ? data.fee_max : fee;
         },
       }));
   }

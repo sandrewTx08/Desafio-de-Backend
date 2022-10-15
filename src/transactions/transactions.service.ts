@@ -30,6 +30,23 @@ export class TransactionsService {
     private readonly accountTransactionTypeService: AccountTransactionTypesService,
   ) {}
 
+  totalAmountOnTheDay(
+    transaction_code: TransactionCode,
+    from_account_id: number,
+  ) {
+    const date = new Date();
+    date.setHours(0, 0, 0, 0);
+
+    return this.prisma.transactions.findMany({
+      select: { amount: true },
+      where: {
+        from_account_id,
+        date: { lt: new Date(), gt: date },
+        transaction_type: transaction_code,
+      },
+    });
+  }
+
   async transfer(
     data: TransactionTransferPipe,
   ): Promise<TransactionTransferType> {
@@ -44,10 +61,19 @@ export class TransactionsService {
 
     if (!to || !from) throw ERROR_USER_TRANSFER;
 
-    const { fee } = await this.accountTransactionTypeService.findOne({
-      account_type_id: from.account_type_id,
-      transaction_type_id: TransactionCode.TRANSFER,
-    });
+    const { fee, limit_per_day } =
+      await this.accountTransactionTypeService.findOne({
+        account_type_id: from.account_type_id,
+        transaction_type_id: TransactionCode.TRANSFER,
+      });
+
+    const total_amount_transaction_on_the_day = (
+      await this.totalAmountOnTheDay(TransactionCode.TRANSFER, from.id)
+    )
+      .map((data) => data.amount)
+      .reduce((previous, current) => previous.add(current));
+
+    if (total_amount_transaction_on_the_day.gt(limit_per_day)) throw Error('');
 
     const from_tranfer_balance = from.balance.sub(amount).sub(fee(amount));
     if (from_tranfer_balance.lt(amount)) throw ERROR_NO_FUNDS;

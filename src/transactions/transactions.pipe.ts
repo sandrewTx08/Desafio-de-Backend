@@ -1,5 +1,5 @@
 import { Type } from 'class-transformer';
-import { IsInt, Max } from 'class-validator';
+import { IsInt } from 'class-validator';
 
 export class TransactionPipe {
   @IsInt()
@@ -19,7 +19,6 @@ export class TransactionTransferPipe extends TransactionPipe {
 
 export class TransactionDepositPipe extends TransactionPipe {
   @IsInt()
-  @Max(2000)
   @Type(() => Number)
   amount: number;
 }

@@ -30,21 +30,28 @@ export class TransactionsService {
     private readonly accountTransactionTypeService: AccountTransactionTypesService,
   ) {}
 
-  totalAmountOnTheDay(
-    transaction_code: TransactionCode,
+  async totalAmountOnTheDay(
+    transaction_type: TransactionCode,
     from_account_id: number,
   ) {
     const date = new Date();
     date.setHours(0, 0, 0, 0);
 
-    return this.prisma.transactions.findMany({
-      select: { amount: true },
-      where: {
-        from_account_id,
-        date: { lt: new Date(), gt: date },
-        transaction_type: transaction_code,
-      },
-    });
+    return (
+      await this.prisma.transactions.findMany({
+        select: { amount: true },
+        where: {
+          from_account_id,
+          date: { lt: new Date(), gt: date },
+          transaction_type,
+        },
+      })
+    )
+      .map((data) => data.amount)
+      .reduce(
+        (previous, current) => previous.add(current),
+        new Prisma.Decimal(0),
+      );
   }
 
   async transfer(
@@ -67,11 +74,10 @@ export class TransactionsService {
         transaction_type_id: TransactionCode.TRANSFER,
       });
 
-    const total_amount_transaction_on_the_day = (
-      await this.totalAmountOnTheDay(TransactionCode.TRANSFER, from.id)
-    )
-      .map((data) => data.amount)
-      .reduce((previous, current) => previous.add(current));
+    const total_amount_transaction_on_the_day = await this.totalAmountOnTheDay(
+      TransactionCode.TRANSFER,
+      from.id,
+    );
 
     if (total_amount_transaction_on_the_day.gt(limit_per_day)) throw Error('');
 
